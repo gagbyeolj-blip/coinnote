@@ -3,19 +3,29 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>우리 가족 용돈기입장</title>
+<title>용돈기입장</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="css/style.css" />
+
+<!-- ===== PWA 설정 ===== -->
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#16181f" />
+<link rel="icon" href="icons/icon-192.png" />
+<!-- 아이폰(iOS)에서 홈 화면에 추가했을 때 쓰이는 설정들 -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="용돈기입장" />
 </head>
 <body>
 
 <div class="wrap wrap-landing">
 
   <header class="landing-header">
-    <h1 class="brand">우리 가족 용돈기입장</h1>
+    <h1 class="brand">용돈기입장</h1>
     <p class="landing-sub">누구의 용돈기입장을 볼까요?</p>
   </header>
 
@@ -27,6 +37,7 @@
 </div>
 
 <script src="js/users.js"></script>
+<script src="js/register-sw.js"></script>
 <script>
   // USERS 배열(js/users.js)을 기반으로 세로 버튼 목록을 만들고,
   // 각 버튼은 ledger.html?user=번호 로 실제 페이지 이동(링크)을 합니다.
