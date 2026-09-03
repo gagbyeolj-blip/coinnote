@@ -1,0 +1,420 @@
+/* ============================================================
+   용돈기입장 스타일시트 — 모바일 우선(mobile-first) 구조
+
+   이 파일의 규칙 순서가 중요합니다.
+   1) 위쪽 대부분: "모바일 기준" 기본 스타일입니다. 휴대폰 화면이 이 스타일을
+      그대로 씁니다. 즉, 웬만한 디자인 수정은 여기 한 곳만 고치면 됩니다.
+   2) 맨 아래 `@media (min-width: 720px) { ... }` 한 블록만 태블릿/PC처럼
+      "화면이 넓을 때 추가로 바뀌는 부분"입니다. PC용 디자인을 바꾸고
+      싶을 때만 그 블록을 건드리면 되고, 나머지는 신경 쓸 필요 없습니다.
+
+   색상/간격을 바꾸고 싶으면 아래 :root 안의 변수만 수정하면 됩니다.
+   ============================================================ */
+
+:root {
+  /* 기본 색상 */
+  --bg: #f5f6f8;            /* 페이지 배경 */
+  --surface: #ffffff;       /* 카드/표 배경 */
+  --ink: #16181f;           /* 기본 글자색 */
+  --ink-soft: #7a7f8c;      /* 보조 글자색 */
+  --border: #e7e8ec;        /* 옅은 구분선 */
+  --border-strong: #d7d9e0;
+
+  /* 의미 색상 */
+  --income: #0f9d68;        /* 수입 초록 */
+  --income-bg: #e6f7ef;
+  --expense: #e5484d;       /* 지출 빨강 */
+  --expense-bg: #fdeced;
+  --locked: #a8adb8;
+
+  /* 1~4번 사용자 탭 색상 (원하는 색으로 자유롭게 변경하세요) */
+  --user-1: #3b6fe0;
+  --user-2: #e08a2e;
+  --user-3: #0f9d68;
+  --user-4: #8f5ae0;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgba(16, 18, 31, 0.04), 0 1px 8px rgba(16, 18, 31, 0.04);
+
+  /* 모바일에서 손가락으로 누르기 편한 최소 버튼 높이 */
+  --tap-min: 40px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+/* ---------- 헤더 ---------- */
+header.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.today-label {
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
+
+/* ---------- 처음 화면(랜딩 페이지) ---------- */
+.wrap-landing {
+  max-width: 480px;
+  padding-top: 56px;
+}
+
+.landing-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.landing-header .brand {
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+
+.landing-sub {
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  margin: 0;
+}
+
+/* 1~4번 버튼을 세로로 나열 (모바일에서 엄지로 누르기 좋은 큼직한 버튼) */
+.user-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 18px;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 15.5px;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease, border-color 0.12s ease;
+  border-left: 5px solid var(--border-strong);
+}
+.user-link:active { transform: scale(0.99); }
+.user-link[data-user="1"] { border-left-color: var(--user-1); }
+.user-link[data-user="2"] { border-left-color: var(--user-2); }
+.user-link[data-user="3"] { border-left-color: var(--user-3); }
+.user-link[data-user="4"] { border-left-color: var(--user-4); }
+
+.user-link-arrow {
+  color: var(--ink-soft);
+  font-size: 19px;
+}
+
+/* 기입장 페이지 상단의 "처음으로" 링크 */
+.back-link {
+  display: inline-block;
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  padding: 4px 0; /* 터치 영역을 살짝 넓혀줌 */
+}
+
+/* ---------- 상단 요약 카드 ---------- */
+/* 모바일 기본값: 세로로 쌓임 (좁은 화면에서 숫자가 눌리지 않게) */
+.summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.summary .card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary .card .label {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.summary .card .value {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary .card.income .value { color: var(--income); }
+.summary .card.expense .value { color: var(--expense); }
+.summary .card.balance {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.summary .card.balance .label { color: rgba(255, 255, 255, 0.6); }
+.summary .card.balance .value { color: #fff; font-size: 21px; }
+
+/* ---------- 월 탭 (4개월: 이전전달/이전달/이번달/다음달) ---------- */
+.month-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  background: #eceef2;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.month-tab {
+  flex: 1;
+  text-align: center;
+  padding: 9px 4px;
+  min-height: var(--tap-min);
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.month-tab[data-active="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+
+.month-tab .lock {
+  font-size: 10px;
+  color: var(--locked);
+  display: block;
+  margin-top: 1px;
+  font-weight: 400;
+}
+
+/* ---------- 표(엑셀처럼 입력하기 쉬운 표) ---------- */
+/* 모바일에서는 표를 억지로 구겨넣지 않고, 옆으로 스크롤하게 둡니다.
+   (칸을 억지로 줄이면 숫자/글자가 겹치거나 읽기 힘들어져서, 스크롤이
+    실제로 훨씬 "엑셀처럼" 쓰기 편합니다) */
+.table-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: var(--shadow);
+}
+
+table.ledger {
+  width: 100%;
+  min-width: 640px; /* 이 너비 아래로는 안 눌리고 옆으로 스크롤됨 */
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+table.ledger th {
+  background: #fafafb;
+  text-align: left;
+  padding: 11px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+table.ledger td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+table.ledger tbody tr:hover { background: #fafafb; }
+table.ledger tbody tr:last-child td { border-bottom: none; }
+
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tag.income { background: var(--income-bg); color: var(--income); }
+.tag.expense { background: var(--expense-bg); color: var(--expense); }
+
+.amount-cell { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.amount-cell.income { color: var(--income); }
+.amount-cell.expense { color: var(--expense); }
+
+.row-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+.row-actions button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 8px 10px; /* 손가락으로 누르기 좋게 여유 있게 */
+  color: var(--ink-soft);
+  border-radius: 6px;
+}
+.row-actions button:active { color: var(--ink); background: #f0f1f4; }
+.row-actions .danger:active { color: var(--expense); background: var(--expense-bg); }
+
+/* ---------- 새 항목 입력 줄 / 수정 중인 줄 ---------- */
+tr.new-row td, tr.edit-row td { background: #fbfbfc; }
+
+tr.new-row select,
+tr.new-row input,
+.edit-row select,
+.edit-row input {
+  width: 100%;
+  min-height: var(--tap-min); /* 손가락으로 누르기 좋은 높이 */
+  padding: 8px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  /* 16px 미만이면 아이폰 사파리가 입력칸을 탭할 때마다 화면을 확대해버려서
+     16px로 고정했습니다. 이 값은 그대로 두는 걸 권장해요. */
+  font-size: 16px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--ink);
+}
+tr.new-row select:focus,
+tr.new-row input:focus,
+.edit-row select:focus,
+.edit-row input:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.amount-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.amount-input-wrap input {
+  text-align: right;
+  padding-right: 32px;
+}
+.amount-input-wrap .won-suffix {
+  position: absolute;
+  right: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+
+.btn {
+  border: none;
+  border-radius: 7px;
+  padding: 10px 18px;
+  min-height: var(--tap-min);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn.primary { background: var(--ink); color: #fff; }
+.btn.primary:active { opacity: 0.85; }
+
+/* ---------- 잠긴(수정 불가) 월 안내 ---------- */
+.locked-banner {
+  padding: 11px 14px;
+  background: #fafafb;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+
+.empty-state {
+  padding: 40px 18px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+}
+
+/* ============================================================
+   여기부터 딱 한 블록: 화면이 넓을 때(태블릿/PC, 720px 이상)만
+   추가로 적용되는 스타일입니다. PC용 디자인을 바꾸고 싶다면
+   이 블록 안의 값만 수정하면 됩니다. 나머지는 전부 모바일 스타일이
+   그대로 이어받아 쓰입니다.
+   ============================================================ */
+@media (min-width: 720px) {
+  .wrap { padding: 40px 24px 100px; }
+  .wrap-landing { padding-top: 100px; }
+
+  .brand { font-size: 24px; }
+  .landing-header .brand { font-size: 26px; }
+  .landing-sub { font-size: 14px; }
+
+  header.top { margin-bottom: 28px; }
+  .today-label { font-size: 13px; }
+
+  .user-link { padding: 20px 22px; font-size: 16px; }
+  .user-link:hover { transform: translateY(-1px); border-color: var(--border-strong); }
+
+  /* 요약 카드는 넓은 화면에서만 가로 3칸으로 */
+  .summary { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+  .summary .card { display: block; padding: 18px 20px; }
+  .summary .card .label { margin-bottom: 8px; }
+  .summary .card .value { font-size: 24px; }
+  .summary .card.balance .value { font-size: 26px; }
+
+  .month-tab { font-size: 13.5px; padding: 9px 6px; }
+  .month-tab:hover { color: var(--ink); }
+  .month-tab .lock { font-size: 10.5px; }
+
+  table.ledger { font-size: 13.5px; }
+  table.ledger th, table.ledger td { padding: 12px 14px; }
+
+  .row-actions button:hover { color: var(--ink); background: #f0f1f4; }
+  .row-actions .danger:hover { color: var(--expense); background: var(--expense-bg); }
+
+  .btn.primary:hover { opacity: 0.85; }
+}
