@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>우리 가족 용돈기입장</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="wrap wrap-landing">
+
+  <header class="landing-header">
+    <h1 class="brand">우리 가족 용돈기입장</h1>
+    <p class="landing-sub">누구의 용돈기입장을 볼까요?</p>
+  </header>
+
+  <!-- ================= 1~4번 버튼 (세로로 나열) ================= -->
+  <!-- 버튼 이름을 바꾸고 싶다면 js/users.js 의 name 값만 수정하세요.
+       버튼을 누르면 이 페이지에서 ledger.html(다른 html 파일)로 완전히 이동합니다. -->
+  <nav class="user-links" id="userLinks"></nav>
+
+</div>
+
+<script src="js/users.js"></script>
+<script>
+  // USERS 배열(js/users.js)을 기반으로 세로 버튼 목록을 만들고,
+  // 각 버튼은 ledger.html?user=번호 로 실제 페이지 이동(링크)을 합니다.
+  const nav = document.getElementById("userLinks");
+
+  USERS.forEach((user) => {
+    const link = document.createElement("a");
+    link.className = "user-link";
+    link.dataset.user = user.no;
+    link.href = `ledger.html?user=${user.no}`;
+    link.innerHTML = `
+      <span class="user-link-name">${user.name} 용돈기입장</span>
+      <span class="user-link-arrow">›</span>
+    `;
+    nav.appendChild(link);
+  });
+</script>
+</body>
+</html>
