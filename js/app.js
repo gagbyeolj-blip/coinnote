@@ -80,6 +80,8 @@ const state = {
   selectedMonthIndex: 2,        // monthWindow 안에서 현재 보고 있는 탭 (기본: 이번달)
   transactions: [],             // 현재 선택된 사용자+월의 기록 목록
   editingId: null,              // 지금 인라인 수정 중인 행의 id (없으면 null)
+  unlockedMonths: new Set(),    // "이 달도 수정하기"로 임시 잠금 해제한 monthWindow 인덱스 목록
+                                 // (새로고침하면 초기화되어 다시 이번달만 수정 가능한 상태로 돌아갑니다)
 };
 
 
@@ -145,8 +147,12 @@ function renderMonthTabs() {
     const tab = document.createElement("button");
     tab.className = "month-tab";
     tab.dataset.active = String(index === state.selectedMonthIndex);
-    tab.innerHTML = `${m.year}년 ${m.label}` +
-      (m.isCurrent ? "" : `<span class="lock">보기 전용</span>`);
+    const lockLabel = m.isCurrent
+      ? ""
+      : state.unlockedMonths.has(index)
+      ? `<span class="lock">임시 수정 가능</span>`
+      : `<span class="lock">보기 전용</span>`;
+    tab.innerHTML = `${m.year}년 ${m.label}` + lockLabel;
     tab.addEventListener("click", () => {
       state.selectedMonthIndex = index;
       state.editingId = null;
@@ -210,21 +216,41 @@ function renderTable() {
   const lockedBanner = document.getElementById("lockedBanner");
   const emptyState = document.getElementById("emptyState");
 
-  lockedBanner.style.display = month.isCurrent ? "none" : "block";
+  // 이번달이거나, "이 달도 수정하기"로 임시로 잠금 해제한 달이면 수정 가능
+  const editable = month.isCurrent || state.unlockedMonths.has(state.selectedMonthIndex);
+
+  if (month.isCurrent) {
+    lockedBanner.style.display = "none";
+  } else if (editable) {
+    lockedBanner.style.display = "block";
+    lockedBanner.innerHTML = `🔓 이번 화면을 보는 동안만 임시로 수정할 수 있어요. (새로고침하면 다시 잠깁니다)`;
+  } else {
+    lockedBanner.style.display = "block";
+    lockedBanner.innerHTML = `🔒 이 달은 지난 달(또는 다음 달) 기록이라 수정할 수 없어요. 보기만 가능합니다.
+      <button id="unlockMonthBtn" class="btn ghost-unlock">이 달도 수정하기</button>`;
+    document.getElementById("unlockMonthBtn").addEventListener("click", () => {
+      if (confirm("이 달 기록도 임시로 수정할 수 있게 열까요? (새로고침하면 다시 잠겨요)")) {
+        state.unlockedMonths.add(state.selectedMonthIndex);
+        renderMonthTabs();
+        renderTable();
+      }
+    });
+  }
+
   tbody.innerHTML = "";
 
   state.transactions.forEach((t) => {
     if (state.editingId === t.id) {
       tbody.appendChild(buildEditRow(t));
     } else {
-      tbody.appendChild(buildReadRow(t, month.isCurrent));
+      tbody.appendChild(buildReadRow(t, editable));
     }
   });
 
   emptyState.style.display = state.transactions.length === 0 ? "block" : "none";
 
-  // 이번달일 때만 맨 아래에 "새 항목 추가" 입력 줄을 보여줍니다.
-  if (month.isCurrent) {
+  // 이번달이거나 임시로 잠금 해제한 달이면 맨 아래에 "새 항목 추가" 입력 줄을 보여줍니다.
+  if (editable) {
     tbody.appendChild(buildNewRow());
   }
 }
@@ -272,7 +298,11 @@ function buildEditRow(t) {
   const tr = document.createElement("tr");
   tr.className = "edit-row";
 
+  const month = state.monthWindow[state.selectedMonthIndex];
+  const bounds = monthDateBounds(month);
   const dateInput = inputEl("date", t.entry_date);
+  dateInput.min = bounds.min;
+  dateInput.max = bounds.max;
   const typeSelect = selectEl(
     [["income", "수입"], ["expense", "지출"]],
     t.type
@@ -318,6 +348,10 @@ function buildEditRow(t) {
       alert("금액을 숫자로 입력해주세요.");
       return;
     }
+    if (dateInput.value < bounds.min || dateInput.value > bounds.max) {
+      alert(`날짜는 ${month.year}년 ${month.month + 1}월 안에서만 고를 수 있어요.`);
+      return;
+    }
     updateTransaction(t.id, {
       entry_date: dateInput.value,
       type: typeSelect.value,
@@ -361,7 +395,10 @@ function buildNewRow() {
     ? todayIso
     : `${month.year}-${pad2(month.month + 1)}-01`;
 
+  const bounds = monthDateBounds(month);
   const dateInput = inputEl("date", defaultDate);
+  dateInput.min = bounds.min;
+  dateInput.max = bounds.max;
   const typeSelect = selectEl([["expense", "지출"], ["income", "수입"]], "expense");
   const categoryCell = document.createElement("td");
   const amountWrap = amountInputWrap("");
@@ -398,6 +435,10 @@ function buildNewRow() {
     const amount = readAmountValue(amountWrap);
     if (!dateInput.value) {
       alert("날짜를 선택해주세요.");
+      return;
+    }
+    if (dateInput.value < bounds.min || dateInput.value > bounds.max) {
+      alert(`날짜는 ${month.year}년 ${month.month + 1}월 안에서만 고를 수 있어요.`);
       return;
     }
     if (!amount || amount <= 0) {
@@ -473,6 +514,17 @@ async function deleteTransaction(id) {
 function getExpenseCategories(userNo) {
   const extra = SPECIAL_CATEGORIES[userNo] || [];
   return [...BASE_EXPENSE_CATEGORIES, ...extra];
+}
+
+// 지금 보고 있는 달의 첫날/마지막날을 "YYYY-MM-DD" 문자열로 반환합니다.
+// 날짜 입력칸(달력)이 이 범위 밖 날짜를 고르지 못하게 막는 데 씁니다.
+// (이렇게 안 하면 예를 들어 9월 화면에서 날짜만 7월로 바꿔서 추가해버리면
+//  7월 데이터로 몰래 들어가버려서 "지난달은 잠긴다"는 규칙이 무력화돼요)
+function monthDateBounds(month) {
+  const first = `${month.year}-${pad2(month.month + 1)}-01`;
+  const lastDay = new Date(month.year, month.month + 1, 0).getDate();
+  const last = `${month.year}-${pad2(month.month + 1)}-${pad2(lastDay)}`;
+  return { min: first, max: last };
 }
 
 function inputEl(type, value) {

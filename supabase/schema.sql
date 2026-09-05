@@ -42,3 +42,21 @@ create index if not exists idx_transactions_user_date
 --          배포한 사이트 주소(URL)를 가족 외의 사람에게 공유하지 마세요.
 -- ------------------------------------------------------------
 alter table transactions disable row level security;
+
+-- ------------------------------------------------------------
+-- 오래된 기록 자동 삭제 (선택 사항)
+-- 화면에는 [이전전달·이전달·이번달·다음달] 4개월치만 보여주는데,
+-- 그 범위보다 오래된 기록은 DB에서도 매일 자정에 자동으로 삭제되도록
+-- pg_cron으로 예약해뒀습니다. (한 번 지워지면 복구할 수 없습니다)
+--
+-- 끄고 싶다면 아래 한 줄만 실행하면 됩니다:
+--   select cron.unschedule('cleanup-old-transactions');
+-- ------------------------------------------------------------
+create extension if not exists pg_cron;
+
+select cron.schedule(
+  'cleanup-old-transactions',
+  '0 0 * * *', -- 매일 자정
+  $$ delete from transactions where entry_date < (date_trunc('month', current_date) - interval '2 months') $$
+);
+

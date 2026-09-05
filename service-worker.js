@@ -14,7 +14,7 @@
 // (버전을 안 올리면 사용자 브라우저에 예전 캐시가 계속 남아있을 수 있어요)
 // ============================================================
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `allowance-tracker-${CACHE_VERSION}`;
 
 const APP_SHELL_FILES = [
