@@ -80,8 +80,6 @@ const state = {
   selectedMonthIndex: 2,        // monthWindow 안에서 현재 보고 있는 탭 (기본: 이번달)
   transactions: [],             // 현재 선택된 사용자+월의 기록 목록
   editingId: null,              // 지금 인라인 수정 중인 행의 id (없으면 null)
-  unlockedMonths: new Set(),    // "이 달도 수정하기"로 임시 잠금 해제한 monthWindow 인덱스 목록
-                                 // (새로고침하면 초기화되어 다시 이번달만 수정 가능한 상태로 돌아갑니다)
 };
 
 
@@ -147,12 +145,8 @@ function renderMonthTabs() {
     const tab = document.createElement("button");
     tab.className = "month-tab";
     tab.dataset.active = String(index === state.selectedMonthIndex);
-    const lockLabel = m.isCurrent
-      ? ""
-      : state.unlockedMonths.has(index)
-      ? `<span class="lock">임시 수정 가능</span>`
-      : `<span class="lock">보기 전용</span>`;
-    tab.innerHTML = `${m.year}년 ${m.label}` + lockLabel;
+    tab.innerHTML = `${m.year}년 ${m.label}` +
+      (m.isCurrent ? "" : `<span class="lock">보기 전용</span>`);
     tab.addEventListener("click", () => {
       state.selectedMonthIndex = index;
       state.editingId = null;
@@ -216,25 +210,12 @@ function renderTable() {
   const lockedBanner = document.getElementById("lockedBanner");
   const emptyState = document.getElementById("emptyState");
 
-  // 이번달이거나, "이 달도 수정하기"로 임시로 잠금 해제한 달이면 수정 가능
-  const editable = month.isCurrent || state.unlockedMonths.has(state.selectedMonthIndex);
+  // 이번달만 수정 가능. 그 외 모든 달은 예외 없이 보기 전용입니다.
+  const editable = month.isCurrent;
 
-  if (month.isCurrent) {
-    lockedBanner.style.display = "none";
-  } else if (editable) {
-    lockedBanner.style.display = "block";
-    lockedBanner.innerHTML = `🔓 이번 화면을 보는 동안만 임시로 수정할 수 있어요. (새로고침하면 다시 잠깁니다)`;
-  } else {
-    lockedBanner.style.display = "block";
-    lockedBanner.innerHTML = `🔒 이 달은 지난 달(또는 다음 달) 기록이라 수정할 수 없어요. 보기만 가능합니다.
-      <button id="unlockMonthBtn" class="btn ghost-unlock">이 달도 수정하기</button>`;
-    document.getElementById("unlockMonthBtn").addEventListener("click", () => {
-      if (confirm("이 달 기록도 임시로 수정할 수 있게 열까요? (새로고침하면 다시 잠겨요)")) {
-        state.unlockedMonths.add(state.selectedMonthIndex);
-        renderMonthTabs();
-        renderTable();
-      }
-    });
+  lockedBanner.style.display = editable ? "none" : "block";
+  if (!editable) {
+    lockedBanner.textContent = "🔒 이 달은 지난 달(또는 다음 달) 기록이라 수정할 수 없어요. 보기만 가능합니다.";
   }
 
   tbody.innerHTML = "";
